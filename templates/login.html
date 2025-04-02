@@ -34,7 +34,7 @@
             <h2>Bem-vindo ao SwiftAI</h2>
             <p class="mb-4">Faça login para continuar</p>
             <a href="{{ url_for('google.login') }}" class="google-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" style="height: 20px;">
+                <img src="{{ url_for('static', filename='google-icon-logo.svg') }}" alt="Google Logo" style="height: 20px;">
                 Continuar com Google
             </a>
         </div>
