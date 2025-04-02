@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interface Web com OpenRouter</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Biblioteca para renderizar Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -58,6 +60,71 @@
             border-radius: 8px;
             margin-top: 10px;
         }
+
+        /* Estilos específicos para Markdown */
+        .markdown-response h1, 
+        .markdown-response h2, 
+        .markdown-response h3 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+        }
+        .markdown-response h1 { font-size: 1.8em; }
+        .markdown-response h2 { font-size: 1.5em; }
+        .markdown-response h3 { font-size: 1.3em; }
+        .markdown-response p {
+            margin-bottom: 1em;
+            line-height: 1.6;
+        }
+        .markdown-response ul, 
+        .markdown-response ol {
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }
+        .markdown-response li {
+            margin-bottom: 0.5em;
+        }
+        .markdown-response code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .markdown-response pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+        }
+        .markdown-response blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 10px;
+            color: #666;
+            margin-left: 0;
+            margin-bottom: 1em;
+        }
+        .markdown-response a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .markdown-response a:hover {
+            text-decoration: underline;
+        }
+        .markdown-response table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1em;
+        }
+        .markdown-response th, 
+        .markdown-response td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .markdown-response th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
@@ -100,7 +167,7 @@
                             <img src="{{ chat.image_url }}" alt="Imagem enviada">
                         {% endif %}
                         <h5>Resposta:</h5>
-                        <p>{{ chat.answer }}</p>
+                        <div class="markdown-response">{{ chat.answer }}</div>  <!-- Renderizado como Markdown -->
                     </div>
                 {% endfor %}
             </div>
@@ -108,5 +175,17 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuração do Marked (opcional)
+        marked.setOptions({
+            breaks: true,  // Quebras de linha viram <br>
+            gfm: true     // Suporte a GitHub Flavored Markdown
+        });
+
+        // Converter todos os elementos com a classe 'markdown-response'
+        document.querySelectorAll('.markdown-response').forEach(element => {
+            element.innerHTML = marked.parse(element.textContent);
+        });
+    </script>
 </body>
 </html>
