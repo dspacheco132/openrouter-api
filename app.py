@@ -16,7 +16,7 @@ YOUR_SITE_NAME = os.getenv("YOUR_SITE_NAME")
 
 # Lista de AIs disponíveis
 AIS = {
-    "DeepSeek": "deepseek/deepseek-r1-zero:free",
+    "DeepSeek": "deepseek/deepseek-r1:free",
     "DeepSeek Chat": "deepseek/deepseek-chat:free",  # Nova AI
     "Google Gemma": "google/gemma-3-1b-it:free",
 }
@@ -91,4 +91,4 @@ def index():
     return render_template("index.html", chat_history=chat_history, ais=AIS.keys())
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
