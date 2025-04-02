@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interface Web com OpenRouter</title>
+    <title>SwiftAI</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}" type="imag">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Biblioteca para renderizar Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
@@ -14,7 +15,20 @@
         }
         .container {
             max-width: 800px;
-            margin-top: 50px;
+            margin-top: 30px;
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        .logo {
+            height: 50px;
+            transition: transform 0.3s;
+        }
+        .logo:hover {
+            transform: scale(1.05);
         }
         .chat-container {
             background-color: #ffffff;
@@ -25,17 +39,11 @@
         .chat-header {
             font-size: 24px;
             font-weight: bold;
-            margin-bottom: 20px;
             color: #333;
+            margin: 0;
         }
         .chat-input {
             margin-bottom: 20px;
-        }
-        .chat-response {
-            background-color: #f1f3f4;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
         }
         .btn-primary {
             background-color: #007bff;
@@ -60,97 +68,78 @@
             border-radius: 8px;
             margin-top: 10px;
         }
-
-        /* Estilos específicos para Markdown */
-        .markdown-response h1, 
-        .markdown-response h2, 
-        .markdown-response h3 {
+        /* Estilos Markdown */
+        .markdown-response h1, .markdown-response h2 {
+            font-size: 1.5em;
             margin-top: 1em;
             margin-bottom: 0.5em;
-            font-weight: bold;
         }
-        .markdown-response h1 { font-size: 1.8em; }
-        .markdown-response h2 { font-size: 1.5em; }
-        .markdown-response h3 { font-size: 1.3em; }
         .markdown-response p {
             margin-bottom: 1em;
-            line-height: 1.6;
         }
-        .markdown-response ul, 
-        .markdown-response ol {
+        .markdown-response ul, .markdown-response ol {
             margin-left: 20px;
-            margin-bottom: 1em;
-        }
-        .markdown-response li {
-            margin-bottom: 0.5em;
         }
         .markdown-response code {
             background-color: #f0f0f0;
             padding: 2px 4px;
             border-radius: 3px;
             font-family: monospace;
-            font-size: 0.9em;
         }
         .markdown-response pre {
             background-color: #f8f8f8;
             padding: 10px;
             border-radius: 5px;
             overflow-x: auto;
-            margin-bottom: 1em;
         }
         .markdown-response blockquote {
             border-left: 4px solid #ddd;
             padding-left: 10px;
             color: #666;
-            margin-left: 0;
-            margin-bottom: 1em;
         }
-        .markdown-response a {
-            color: #007bff;
-            text-decoration: none;
+        .loading-spinner {
+            display: none;
+            width: 2rem;
+            height: 2rem;
+            border: 0.25em solid rgba(0, 180, 255, 0.2);
+            border-top-color: #00b4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
-        .markdown-response a:hover {
-            text-decoration: underline;
-        }
-        .markdown-response table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 1em;
-        }
-        .markdown-response th, 
-        .markdown-response td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        .markdown-response th {
-            background-color: #f2f2f2;
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="header-container">
+            <!-- Logotipo - Substitua pelo caminho da sua imagem -->
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
+            <h1 class="chat-header">Interface SwiftAI - OpenRouter</h1>
+        </div>
+        
         <div class="chat-container">
-            <div class="chat-header">
-                Interface Web do OpenRouter
-            </div>
-            <form method="POST">
+            <form method="POST" id="chatForm">
                 <div class="mb-3 chat-input">
                     <label for="question" class="form-label">Faça uma pergunta:</label>
-                    <textarea class="form-control" id="question" name="question" rows="3"></textarea>
+                    <textarea class="form-control" id="question" name="question" rows="3" required></textarea>
                 </div>
                 <div class="mb-3">
                     <label for="image_url" class="form-label">URL da imagem (opcional):</label>
                     <input type="text" class="form-control" id="image_url" name="image_url">
                 </div>
                 <div class="mb-3">
-                    <label for="ai" class="form-label">Escolhe a AI:</label>
+                    <label for="ai" class="form-label">Escolha a AI:</label>
                     <select class="form-select" id="ai" name="ai" required>
                         {% for ai in ais %}
                             <option value="{{ ai }}">{{ ai }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Enviar</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Enviar</button>
+                <div id="loadingSpinner" class="loading-spinner"></div>
             </form>
 
             <!-- Exibir o histórico de conversas -->
@@ -164,10 +153,10 @@
                         {% endif %}
                         {% if chat.image_url %}
                             <h5>Imagem:</h5>
-                            <img src="{{ chat.image_url }}" alt="Imagem enviada">
+                            <img src="{{ chat.image_url }}" alt="Imagem enviada" class="img-fluid">
                         {% endif %}
                         <h5>Resposta:</h5>
-                        <div class="markdown-response">{{ chat.answer }}</div>  <!-- Renderizado como Markdown -->
+                        <div class="markdown-response">{{ chat.answer }}</div>
                     </div>
                 {% endfor %}
             </div>
@@ -176,15 +165,29 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Configuração do Marked (opcional)
+        // Configuração do Marked
         marked.setOptions({
-            breaks: true,  // Quebras de linha viram <br>
-            gfm: true     // Suporte a GitHub Flavored Markdown
+            breaks: true,
+            gfm: true
         });
 
-        // Converter todos os elementos com a classe 'markdown-response'
+        // Converter Markdown para HTML
         document.querySelectorAll('.markdown-response').forEach(element => {
             element.innerHTML = marked.parse(element.textContent);
+        });
+
+        // Adicionar efeito de zoom nas imagens
+        document.querySelectorAll('.chat-history-item img').forEach(img => {
+            img.style.cursor = 'zoom-in';
+            img.onclick = function() {
+                this.style.maxWidth = this.style.maxWidth === '100%' ? '150%' : '100%';
+            };
+        });
+
+        // Mostrar spinner durante o envio
+        document.getElementById('chatForm').addEventListener('submit', function() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
         });
     </script>
 </body>
